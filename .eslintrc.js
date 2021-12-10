@@ -16,9 +16,14 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
-    '@typescript-eslint/interface-name-prefix': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-explicit-any': 'off',
+    'prettier/prettier': ['warn', {
+      'singleQuote': true,
+      'trailingComma': 'all',
+      'endOfLine': 'auto',
+      'printWidth': 100
+    }],
+    '@typescript-eslint/explicit-function-return-type': 'error',
+    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/ban-types': 'warn',
   },
 };
