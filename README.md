@@ -1,35 +1,77 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# example-nest-typeorm
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## TypeORM config
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- Create `ormconfig.ts` and export the config object with the syntax `export = {...}`.
+The actual object can be imported from other sources.
 
-## Description
+## Executing TypeORM CLI commands with `.ts` config file
+- Make sure `ts-node` is installed locally
+- Create the following script in `package.json`:
+  ```json
+  "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli -f ./ormconfig.ts"
+  ```
+- Now you can execute TypeORM commands using `npm run typeorm` as a proxy:
+  ```bash
+  $ npm run typeorm migration:run
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+  # make sure to use -- when passing flags
+  $ npm run typeorm migration:generate -- -n migration-name
+  ```
 
-## Installation
+## Using environment variables in TypeORM config
+`ormconfig.ts` gets the config from the factoy function `getTypeOrmConfig` from `src/config/typeOrmConfig.ts`.
 
-```bash
-$ npm install
+TypeORM CLI loads env variables from the `.env` file before running `ormconfig.ts`, so we use `process.env` to set the config properties:
+```typescript
+const typeOrmConfig: TypeOrmModuleOptions = {
+  type: 'mysql',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  entities: [User],
+  cli: {
+    migrationsDir: 'migration',
+  },
+};
+```
+
+Since we want to use `ConfigService` instead of `process.env` when the app is running, `getTypeOrmConfig` has an optional `configService` parameter.
+This way when this function is called from the CLI it will get the env variables from `process.env`, and from `ConfigService` when called from the app.
+```typescript
+export const getTypeOrmConfig = (configService?: ConfigService): TypeOrmModuleOptions => {
+  if (!configService) {
+    return typeOrmConfig;
+  }
+
+  return {
+    ...typeOrmConfig,
+    host: configService.get('DB_HOST'),
+    port: configService.get('DB_PORT'),
+    username: configService.get('DB_USERNAME'),
+    password: configService.get<string>('DB_PASSWORD'),
+    database: configService.get<string>('DB_DATABASE'),
+  };
+};
+```
+
+To register `TypeormModule` we use `TypeOrmModule.forRootAsync` instead of `TypeOrmModule.forRoot`.
+Then we import `ConfigModule` and inject `ConfigService` in the `forRootAsync` options:
+```typescript
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: getTypeOrmConfig,
+    }),
+  ],
+})
+export class AppModule {}
+
 ```
 
 ## Running the app
@@ -57,17 +99,3 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).

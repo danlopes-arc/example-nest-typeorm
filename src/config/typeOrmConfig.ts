@@ -1,18 +1,31 @@
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { User } from '../users/user.entity';
 
-const migrationsDir = 'migration';
-
-export const typeOrmConfig: TypeOrmModuleOptions = {
+const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'mysql',
-  host: 'localhost',
-  port: 3306,
-  username: 'root',
-  password: 'root',
-  database: 'example_nest_typeorm',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   entities: [User],
-  migrations: [`${migrationsDir}/*.ts`],
   cli: {
-    migrationsDir,
+    migrationsDir: 'migration',
   },
+};
+
+export const typeOrmConfigFactory = (configService?: ConfigService): TypeOrmModuleOptions => {
+  if (!configService) {
+    return typeOrmConfig;
+  }
+
+  return {
+    ...typeOrmConfig,
+    host: configService.get('DB_HOST'),
+    port: configService.get('DB_PORT'),
+    username: configService.get('DB_USERNAME'),
+    password: configService.get<string>('DB_PASSWORD'),
+    database: configService.get<string>('DB_DATABASE'),
+  };
 };

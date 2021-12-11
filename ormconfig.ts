@@ -1,3 +1,3 @@
-import { typeOrmConfig } from './src/config/typeOrmConfig';
+import { typeOrmConfigFactory } from './src/config/typeOrmConfig';
 
-export = typeOrmConfig;
+export = typeOrmConfigFactory();
