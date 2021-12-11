@@ -1,5 +1,9 @@
 # example-nest-typeorm
 
+This is an example of how to setup TypeORM configuration so it can be used by both the Nest app and the TypeORM CLI.
+The trick here is that the configuration file is written in typescript which makes things more interesting.
+Also the config file has to be able to get some values from the environmet variables. So, that's how you do it:
+
 ## TypeORM config
 
 - Create `ormconfig.ts` and export the config object with the syntax `export = {...}`.
