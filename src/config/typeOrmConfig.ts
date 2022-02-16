@@ -10,6 +10,7 @@ const typeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   entities: [User],
+  migrations: ['migration/*.ts'],
   cli: {
     migrationsDir: 'migration',
   },
