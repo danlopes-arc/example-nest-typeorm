@@ -22,6 +22,9 @@ export class User {
   @Column({ type: 'enum', enum: UserType })
   type!: UserType;
 
+  @Column()
+  is!: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
 
