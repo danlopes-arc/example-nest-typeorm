@@ -14,5 +14,9 @@
     "skipLibCheck": true,
     "strict": true,
     "strictBindCallApply": false
-  }
+  },
+  "include": [
+    "src",
+    "migration"
+  ]
 }
