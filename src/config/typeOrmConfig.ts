@@ -8,17 +8,9 @@ interface CreateTypeOrmConfigOptions {
   username?: string;
   password?: string;
   database?: string;
-  includeMigrationOptions?: boolean;
 }
 
 export const createTypeOrmConfig = (options: CreateTypeOrmConfigOptions): TypeOrmModuleOptions => {
-  const migrationOptions = {
-    migrations: ['migration/*.ts'],
-    cli: {
-      migrationsDir: '/migration',
-    },
-  };
-
   return {
     type: 'mysql',
     host: options.host,
@@ -27,7 +19,22 @@ export const createTypeOrmConfig = (options: CreateTypeOrmConfigOptions): TypeOr
     password: options.password,
     database: options.database,
     entities: [User],
-    ...(options.includeMigrationOptions ? migrationOptions : {}),
+  };
+};
+
+export const createCliTypeOrmConfig = (): TypeOrmModuleOptions => {
+  return {
+    ...createTypeOrmConfig({
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+    }),
+    migrations: ['migration/*.ts'],
+    cli: {
+      migrationsDir: '/migration',
+    },
   };
 };
 
